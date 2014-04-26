@@ -65,7 +65,6 @@ pub trait BlockCipher {
     }
 
     fn encrypt_cbc(&self, iv: &[u8], ptext: &[u8]) -> Vec<u8> {
-        use serialize::hex::ToHex;
         if ptext.len() == 0 {
             return Vec::new();
         }

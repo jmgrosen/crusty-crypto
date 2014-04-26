@@ -1,10 +1,10 @@
-use std::mem;
+use std::num::Zero;
 
 pub struct SecureMem<T> {
     wrapped: T
 }
 
-impl<T: Copy> SecureMem<T> {
+impl<T: CleanOut> SecureMem<T> {
     pub fn new(val: T) -> SecureMem<T> {
         SecureMem { wrapped: val }
     }
@@ -23,11 +23,29 @@ impl<T> DerefMut<T> for SecureMem<T> {
 }
 
 #[unsafe_destructor]
-impl<T: Copy> Drop for SecureMem<T> {
+impl<T: CleanOut> Drop for SecureMem<T> {
     #[inline(never)]
     fn drop(&mut self) {
-        unsafe {
-            self.wrapped = mem::init();
+        self.wrapped.clear_self();
+    }
+}
+
+trait CleanOut {
+    fn clear_self(&mut self);
+}
+
+impl CleanOut for [u32, ..16] {
+    fn clear_self(&mut self) {
+        for b in self.mut_iter() {
+            *b = 0;
+        }
+    }
+}
+
+impl<T: Zero> CleanOut for Vec<T> {
+    fn clear_self(&mut self) {
+        for b in self.mut_iter() {
+            *b = Zero::zero();
         }
     }
 }
