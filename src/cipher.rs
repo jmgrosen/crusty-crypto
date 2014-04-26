@@ -77,9 +77,7 @@ pub trait BlockCipher {
         let mut xored = Vec::from_elem(bs, 0u8);
 
         bxor_into(iv, ptext.slice_to(bs), xored.as_mut_slice());
-        println!("xored is {}", xored.as_slice().to_hex());
         self.encrypt_block(xored.as_slice(), ctext.mut_slice_to(bs));
-        println!("ctext is {}", ctext.as_slice().to_hex());
 
         for i in range(1, ptext.len() / bs) {
             bxor_into(ptext.slice(i*bs, (i+1)*bs),
