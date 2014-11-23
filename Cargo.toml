@@ -1,0 +1,9 @@
+[package]
+
+name = "crusty-crypto"
+version = "0.0.1"
+authors = ["John Grosen <jmgrosen@gmail.com>"]
+
+[dependencies]
+
+num = "~0.0.4"

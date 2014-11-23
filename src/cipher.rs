@@ -40,8 +40,8 @@ pub trait BlockCipher {
         let mut out = Vec::from_elem(ptext.len(), 0u8);
 
         for i in range(0, ptext.len() / bs) {
-            self.encrypt_block(ptext.slice(i*bs, (i+1)*bs),
-                               out.mut_slice(i*bs, (i+1)*bs));
+            self.encrypt_block(ptext[i*bs..(i+1)*bs],
+                               out[mut i*bs..(i+1)*bs]);
         }
 
         return out;
@@ -57,8 +57,8 @@ pub trait BlockCipher {
         let mut out = Vec::from_elem(ctext.len(), 0u8);
 
         for i in range(0, ctext.len() / bs) {
-            self.decrypt_block(ctext.slice(i*bs, (i+1)*bs),
-                               out.mut_slice(i*bs, (i+1)*bs));
+            self.decrypt_block(ctext[i*bs..(i+1)*bs],
+                               out[mut i*bs..(i+1)*bs]);
         }
 
         return out;
@@ -75,15 +75,15 @@ pub trait BlockCipher {
         let mut ctext = Vec::from_elem(ptext.len(), 0u8);
         let mut xored = Vec::from_elem(bs, 0u8);
 
-        bxor_into(iv, ptext.slice_to(bs), xored.as_mut_slice());
-        self.encrypt_block(xored.as_slice(), ctext.mut_slice_to(bs));
+        bxor_into(iv, ptext[..bs], xored[mut]);
+        self.encrypt_block(xored[], ctext[mut ..bs]);
 
         for i in range(1, ptext.len() / bs) {
-            bxor_into(ptext.slice(i*bs, (i+1)*bs),
-                      ctext.slice((i-1)*bs, i*bs),
-                      xored.as_mut_slice());
-            self.encrypt_block(xored.as_slice(),
-                               ctext.mut_slice(i*bs, (i+1)*bs));
+            bxor_into(ptext[i*bs..(i+1)*bs],
+                      ctext[(i-1)*bs..i*bs],
+                      xored[mut]);
+            self.encrypt_block(xored[],
+                               ctext[mut i*bs..(i+1)*bs]);
         }
 
         return ctext;
@@ -100,13 +100,13 @@ pub trait BlockCipher {
         let mut ptext = Vec::from_elem(ctext.len(), 0u8);
 
         let mut scratch = Vec::from_elem(bs, 0u8);
-        self.decrypt_block(ctext.slice_to(bs), scratch.as_mut_slice());
-        bxor_into(scratch.as_slice(), iv, ptext.mut_slice_to(bs));
+        self.decrypt_block(ctext[..bs], scratch[mut]);
+        bxor_into(scratch[], iv, ptext[mut ..bs]);
 
         for i in range(1, ctext.len() / bs) {
-            self.decrypt_block(ctext.slice(i*bs, (i+1)*bs), scratch.as_mut_slice());
-            bxor_into(scratch.as_slice(), ctext.slice((i-1)*bs, i*bs),
-                      ptext.mut_slice(i*bs, (i+1)*bs));
+            self.decrypt_block(ctext[i*bs..(i+1)*bs], scratch[mut]);
+            bxor_into(scratch[], ctext[(i-1)*bs..i*bs],
+                      ptext[mut i*bs..(i+1)*bs]);
         }
 
         return ptext;
@@ -114,7 +114,7 @@ pub trait BlockCipher {
 }
 
 fn bxor_into(one: &[u8], two: &[u8], out: &mut [u8]) {
-    for (o, (&a, &b)) in out.mut_iter().zip(one.iter().zip(two.iter())) {
+    for (o, (&a, &b)) in out.iter_mut().zip(one.iter().zip(two.iter())) {
         *o = a ^ b;
     }
 }
@@ -129,14 +129,14 @@ pub trait StreamCipher {
     #[inline(always)]
     fn encrypt(&mut self, input: &[u8]) -> Vec<u8> {
         let mut out = Vec::from_elem(input.len(), 0u8);
-        self.combine(input, out.as_mut_slice());
+        self.combine(input, out[mut]);
         return out;
     }
 
     #[inline(always)]
     fn decrypt(&mut self, input: &[u8]) -> Vec<u8> {
         let mut out = Vec::from_elem(input.len(), 0u8);
-        self.combine(input, out.as_mut_slice());
+        self.combine(input, out[mut]);
         return out;
     }
 }

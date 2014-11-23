@@ -1,6 +1,6 @@
 use cipher::StreamCipher;
 
-struct ChaCha20 {
+pub struct ChaCha20 {
     state: [u32, ..16],
     blocks: [u8, ..64],
     index: u8,
@@ -35,7 +35,7 @@ impl ChaCha20 {
     }
     fn run_all_rounds(&mut self) {
         let mut state = self.state;
-        for _ in range(0, 10) {
+        for _ in range(0i, 10) {
             cc20_qround!(state, 0, 4,  8, 12);
             cc20_qround!(state, 1, 5,  9, 13);
             cc20_qround!(state, 2, 6, 10, 14);
@@ -63,12 +63,12 @@ impl ChaCha20 {
 
 #[cfg(target_endian = "little")]
 fn transmute_array(input: [u32, ..16]) -> [u8, ..64] {
-    unsafe { ::std::cast::transmute(input) }
+    unsafe { ::std::mem::transmute(input) }
 }
 
 impl StreamCipher for ChaCha20 {
     fn combine(&mut self, input: &[u8], output: &mut [u8]) {
-        for (o, &i) in output.mut_iter().zip(input.iter()) {
+        for (o, &i) in output.iter_mut().zip(input.iter()) {
             *o = self.blocks[self.index as uint] ^ i;
             self.index += 1;
             if self.index == 64 {
@@ -81,7 +81,7 @@ impl StreamCipher for ChaCha20 {
 impl Drop for ChaCha20 {
     #[inline(never)]
     fn drop(&mut self) {
-        for b in self.state.mut_iter() {
+        for b in self.state.iter_mut() {
             *b = 0;
         }
     }
@@ -97,7 +97,7 @@ fn test_chacha() {
                                    NONCE.from_hex().unwrap(),
                                    KEYSTREAM.from_hex().unwrap());
 
-    let mut chacha = ChaCha20::new(key, nonce);
+    let mut chacha = ChaCha20::new(key[], nonce[]);
     let output = chacha.encrypt(Vec::from_elem(keystream.len(), 0u8).as_slice());
     assert_eq!(output.as_slice(), keystream.as_slice());
 }
@@ -112,7 +112,7 @@ fn test_chacha2() {
                                    NONCE.from_hex().unwrap(),
                                    KEYSTREAM.from_hex().unwrap());
 
-    let mut chacha = ChaCha20::new(key, nonce);
+    let mut chacha = ChaCha20::new(key[], nonce[]);
     let output = chacha.encrypt(Vec::from_elem(keystream.len(), 0u8).as_slice());
     assert_eq!(output.as_slice(), keystream.as_slice());
 }

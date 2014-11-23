@@ -1,10 +1,11 @@
-use std::slice::MutableCloneableVector;
-
 use cipher;
 use cipher::{KeySize, KeySize128, KeySize192, KeySize256, BlockCipher};
 use securemem::SecureMem;
 
-static Nb: uint = 4;
+use std::slice::bytes;
+
+#[allow(non_upper_case_globals)]
+const Nb: uint = 4;
 
 struct AesState {
     s: [u8, ..(4*Nb)]
@@ -27,7 +28,7 @@ impl AesState {
     fn from_slice(input: &[u8]) -> AesState {
         assert!(input.len() == 4*Nb);
         let mut state = [0, ..(4*Nb)];
-        state.as_mut_slice().copy_from(input);
+        bytes::copy_memory(state[mut], input);
         AesState {
             s: state
         }
@@ -145,7 +146,7 @@ pub struct Aes<KS> {
 }
 
 impl<KS: AesKeySize> Aes<KS> {
-    fn new(key: &[u8]) -> Option<Aes<KS>> {
+    pub fn new(key: &[u8]) -> Option<Aes<KS>> {
         if key.len() == cipher::ksize::<KS>() {
             Some(Aes { ekey: AesKeySize::expand_key(None::<&KS>, key) })
         } else { None }
@@ -177,7 +178,7 @@ impl<KS: AesKeySize> BlockCipher for Aes<KS> {
         state.shift_rows();
         state.add_round_key(w.slice(nr*Nb, (nr+1)*Nb));
 
-        output.copy_from(state.unwrap().as_slice());
+        bytes::copy_memory(output, &state.unwrap());
     }
 
     fn decrypt_block(&self, input: &[u8], output: &mut [u8]) {
@@ -202,7 +203,7 @@ impl<KS: AesKeySize> BlockCipher for Aes<KS> {
         state.inv_sub_bytes();
         state.add_round_key(w.slice_to(Nb));
 
-        output.copy_from(state.unwrap().as_slice());
+        bytes::copy_memory(output, &state.unwrap());
     }
 }
 
@@ -210,6 +211,7 @@ trait AesKeySize: KeySize {
     fn expand_key(_: Option<&Self>, key: &[u8]) -> SecureMem<Vec<u32>>;
     fn num_rounds(_: Option<&Self>) -> uint;
 }
+#[allow(non_upper_case_globals)]
 impl AesKeySize for KeySize128 {
     fn expand_key(_: Option<&KeySize128>, key: &[u8]) -> SecureMem<Vec<u32>> {
         static Nk: uint = 4;
@@ -483,12 +485,12 @@ fn test_one_block() {
                                 PLAIN.from_hex().unwrap(),
                                 CIPHER.from_hex().unwrap());
 
-    let aes: Aes128 = Aes::new(key).unwrap();
+    let aes: Aes128 = Aes::new(key[]).unwrap();
 
-    let ctext = aes.encrypt_ecb(plain);
+    let ctext = aes.encrypt_ecb(plain[]);
     assert_eq!(ctext.as_slice(), cipher.as_slice());
 
-    let ptext = aes.decrypt_ecb(cipher);
+    let ptext = aes.decrypt_ecb(cipher[]);
     assert_eq!(ptext.as_slice(), plain.as_slice());
 }
 
@@ -504,12 +506,12 @@ fn test_cbc() {
                                     PLAIN.from_hex().unwrap(),
                                     CIPHER.from_hex().unwrap());
 
-    let aes: Aes128 = Aes::new(key).unwrap();
+    let aes: Aes128 = Aes::new(key[]).unwrap();
 
-    let ctext = aes.encrypt_cbc(iv, plain);
+    let ctext = aes.encrypt_cbc(iv[], plain[]);
     assert_eq!(ctext.as_slice(), cipher.as_slice());
 
-    let ptext = aes.decrypt_cbc(iv, cipher.as_slice());
+    let ptext = aes.decrypt_cbc(iv[], cipher[]);
     assert_eq!(ptext.as_slice(), plain.as_slice());
 }
 
@@ -525,11 +527,11 @@ fn test_cbc2() {
                                     PLAIN.from_hex().unwrap(),
                                     CIPHER.from_hex().unwrap());
 
-    let aes: Aes128 = Aes::new(key).unwrap();
+    let aes: Aes128 = Aes::new(key[]).unwrap();
 
-    let ctext = aes.encrypt_cbc(iv, plain);
+    let ctext = aes.encrypt_cbc(iv[], plain[]);
     assert_eq!(ctext.as_slice(), cipher.as_slice());
 
-    let ptext = aes.decrypt_cbc(iv, cipher);
+    let ptext = aes.decrypt_cbc(iv[], cipher[]);
     assert_eq!(ptext.as_slice(), plain.as_slice());
 }

@@ -1,4 +1,4 @@
-use std::num::Zero;
+use std::num::Int;
 
 pub struct SecureMem<T> {
     wrapped: T
@@ -36,16 +36,16 @@ trait CleanOut {
 
 impl CleanOut for [u32, ..16] {
     fn clear_self(&mut self) {
-        for b in self.mut_iter() {
+        for b in self.iter_mut() {
             *b = 0;
         }
     }
 }
 
-impl<T: Zero> CleanOut for Vec<T> {
+impl<T: Int> CleanOut for Vec<T> {
     fn clear_self(&mut self) {
-        for b in self.mut_iter() {
-            *b = Zero::zero();
+        for b in self.iter_mut() {
+            *b = Int::zero();
         }
     }
 }
